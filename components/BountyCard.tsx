@@ -13,7 +13,7 @@ const BountyCard: React.FC<BountyCardProps> = ({ bounty, onSelect }) => {
   return (
     <div
       onClick={onSelect}
-      className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-blue-500/20 cursor-pointer transition-all duration-300 transform hover:-translate-y-1"
+      className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-blue-500/20 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:ring-2 hover:ring-blue-500"
     >
       <img className="w-full h-32 object-cover" src={bounty.imageUrl} alt={bounty.title} />
       <div className="p-4">

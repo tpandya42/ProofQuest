@@ -8,6 +8,7 @@ import BountyDetails from './components/BountyDetails';
 import BottomNav from './components/BottomNav';
 import ProfileView from './components/ProfileView';
 import ConnectWallet from './components/ConnectWallet';
+import CreateBountyView from './components/CreateBountyView';
 
 const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -53,6 +54,7 @@ const App: React.FC = () => {
       ...prevUser,
       balance: prevUser.balance + reward,
       completedBounties: prevUser.completedBounties + 1,
+      reputation: prevUser.reputation + 10, // Increase reputation
     }));
 
     // Remove bounty from list
@@ -64,27 +66,50 @@ const App: React.FC = () => {
     }, 2000);
   };
 
+  const handleCreateBounty = (bountyData: Omit<Bounty, 'id' | 'imageUrl'>, totalCost: number) => {
+    const newBounty: Bounty = {
+        ...bountyData,
+        id: new Date().getTime().toString(), // simple unique id
+        imageUrl: `https://picsum.photos/seed/${Math.random()}/400/200` // random image
+    };
+
+    // Add new bounty to the list
+    setBounties(prevBounties => [newBounty, ...prevBounties]);
+    
+    // Deduct cost from user balance
+    setCurrentUser(prevUser => ({
+        ...prevUser,
+        balance: prevUser.balance - totalCost,
+    }));
+    
+    // Switch back to home view
+    setActiveView('home');
+  };
+
   const renderContent = () => {
-    if (activeView === 'home') {
-      if (isLoading) {
-        return (
-          <div className="flex justify-center items-center h-full pt-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        );
-      }
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-24">
-          {bounties.map((bounty) => (
-            <BountyCard key={bounty.id} bounty={bounty} onSelect={() => handleSelectBounty(bounty)} />
-          ))}
-        </div>
-      );
+    switch(activeView) {
+        case 'home':
+            if (isLoading) {
+                return (
+                  <div className="flex justify-center items-center h-full pt-20">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                );
+            }
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-24">
+                  {bounties.map((bounty) => (
+                    <BountyCard key={bounty.id} bounty={bounty} onSelect={() => handleSelectBounty(bounty)} />
+                  ))}
+                </div>
+            );
+        case 'profile':
+            return <ProfileView user={currentUser} />;
+        case 'create':
+            return <CreateBountyView user={currentUser} onCreateBounty={handleCreateBounty} onClose={() => setActiveView('home')} />;
+        default:
+            return null;
     }
-    if (activeView === 'profile') {
-        return <ProfileView user={currentUser} />;
-    }
-    return null;
   };
 
   if (!isConnected) {

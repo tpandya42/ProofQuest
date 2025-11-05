@@ -2,6 +2,9 @@
 import React from 'react';
 import { User } from '../types';
 import { TonIcon } from './icons/TonIcon';
+import { ShieldCheckIcon } from './icons/ShieldCheckIcon';
+import { CheckCircleIcon } from './icons/CheckCircleIcon';
+import { StarIcon } from './icons/StarIcon';
 
 interface ProfileViewProps {
   user: User;
@@ -26,9 +29,10 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
         <p className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full mt-2 truncate max-w-xs">{user.walletAddress}</p>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <StatCard label="Level" value={user.level} />
-        <StatCard label="Bounties Completed" value={user.completedBounties} />
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <StatCard label="Level" value={user.level} icon={<StarIcon className="w-6 h-6 text-yellow-400" />} />
+        <StatCard label="Completed" value={user.completedBounties} icon={<CheckCircleIcon className="w-6 h-6 text-green-400" />} />
+        <StatCard label="Reputation" value={user.reputation} icon={<ShieldCheckIcon className="w-6 h-6 text-indigo-400" />} />
       </div>
 
        <div className="bg-gray-800 p-6 rounded-lg text-center">

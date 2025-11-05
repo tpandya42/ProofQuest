@@ -50,4 +50,5 @@ export const CURRENT_USER: User = {
   balance: 125.5,
   level: 12,
   completedBounties: 34,
+  reputation: 340,
 };

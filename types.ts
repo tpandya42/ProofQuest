@@ -16,6 +16,7 @@ export interface User {
   balance: number; // in TON
   level: number;
   completedBounties: number;
+  reputation: number;
 }
 
-export type View = 'home' | 'profile';
+export type View = 'home' | 'profile' | 'create';

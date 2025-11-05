@@ -66,7 +66,7 @@ const BountyDetails: React.FC<BountyDetailsProps> = ({ bounty, onClose, onSubmit
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const imagePart = await fileToGenerativePart(imageFile);
-      const prompt = `Analyze the provided image. Does it fulfill this request: "${bounty.description}". Respond with only "Yes" or "No", followed by a brief, one-sentence explanation.`;
+      const prompt = `Analyze the provided image to see if it fulfills the core task of this request: "${bounty.description}". Focus on the main subject (e.g., a pothole on a street, a specific product on a shelf) rather than getting stuck on exact, hard-to-verify details like street numbers from the image alone. Is it a plausible submission? Respond with only "Yes" or "No", followed by a brief, one-sentence explanation.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',

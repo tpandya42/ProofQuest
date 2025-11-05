@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { User, Bounty } from '../types';
 import { TonIcon } from './icons/TonIcon';
@@ -45,7 +44,8 @@ const CreateBountyView: React.FC<CreateBountyViewProps> = ({ user, onCreateBount
         return { subtotal: sub, platformFee: fee, totalCost: total };
     }, [reward, proofsNeeded]);
 
-    const canAfford = user.balance >= totalCost;
+    // FIX: Safely access user.balance, providing a default value of 0.
+    const canAfford = (user.balance || 0) >= totalCost;
     const isFormValid = title && description && Number(reward) > 0 && Number(proofsNeeded) > 0 && totalCost > 0;
     
     const handleSubmit = (e: React.FormEvent) => {
@@ -130,7 +130,8 @@ const CreateBountyView: React.FC<CreateBountyViewProps> = ({ user, onCreateBount
                             <span>{totalCost.toFixed(2)} TON</span>
                         </div>
                     </div>
-                     {!canAfford && totalCost > 0 && <p className="text-red-400 text-sm text-center pt-2">Insufficient balance. Your balance is {user.balance.toFixed(2)} TON.</p>}
+                     {/* FIX: Safely access user.balance, providing a default value of 0. */}
+                     {!canAfford && totalCost > 0 && <p className="text-red-400 text-sm text-center pt-2">Insufficient balance. Your balance is {(user.balance || 0).toFixed(2)} TON.</p>}
                 </div>
 
                 <button 

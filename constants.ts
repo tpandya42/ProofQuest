@@ -1,4 +1,3 @@
-
 import { Bounty, User } from './types';
 
 export const MOCK_BOUNTIES: Bounty[] = [
@@ -44,11 +43,12 @@ export const MOCK_BOUNTIES: Bounty[] = [
   },
 ];
 
+// FIX: Updated CURRENT_USER to conform to the User interface.
 export const CURRENT_USER: User = {
-  name: 'QuestTaker',
-  walletAddress: 'EQB...jAA',
+  id: 99,
+  telegram_id: 99999,
+  first_name: 'QuestTaker',
+  wallet_address: 'EQB...jAA',
   balance: 125.5,
-  level: 12,
-  completedBounties: 34,
-  reputation: 340,
+  created_at: new Date().toISOString(),
 };

@@ -1,119 +1,139 @@
-
 import React, { useState, useEffect } from 'react';
-import { Bounty, User, View } from './types';
-import { MOCK_BOUNTIES, CURRENT_USER } from './constants';
+import { Challenge, User, View, SubmissionWithChallengeDetails } from './types';
+import { login, getActiveChallenges, createSubmission, getUserSubmissions, linkWallet } from './backend/api';
 import Header from './components/Header';
-import BountyCard from './components/BountyCard';
-import BountyDetails from './components/BountyDetails';
+import ChallengeCard from './components/ChallengeCard';
+import ChallengeDetails from './components/ChallengeDetails';
 import BottomNav from './components/BottomNav';
 import ProfileView from './components/ProfileView';
-import ConnectWallet from './components/ConnectWallet';
-import CreateBountyView from './components/CreateBountyView';
+import LoginScreen from './components/LoginScreen';
 
 const App: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [bounties, setBounties] = useState<Bounty[]>([]);
-  const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null);
-  const [currentUser, setCurrentUser] = useState<User>(CURRENT_USER);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [userSubmissions, setUserSubmissions] = useState<SubmissionWithChallengeDetails[]>([]);
+  
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [activeView, setActiveView] = useState<View>('home');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Fetch challenges after login
   useEffect(() => {
-    if (isConnected) {
-      // Simulate fetching data only after connection
-      setTimeout(() => {
-        setBounties(MOCK_BOUNTIES);
-        setIsLoading(false);
-      }, 1500);
+    if (currentUser && activeView === 'home') {
+      setIsLoading(true);
+      getActiveChallenges().then(setChallenges).catch(err => {
+        console.error("Failed to fetch challenges:", err);
+        alert(`Error: ${err.message}`);
+      }).finally(() => setIsLoading(false));
     }
-  }, [isConnected]);
+  }, [currentUser, activeView]);
 
-  const handleConnect = () => {
-    setIsConnecting(true);
+  // Fetch submissions when profile is viewed
+  useEffect(() => {
+    if (currentUser && activeView === 'profile') {
+        setIsLoading(true);
+        getUserSubmissions(currentUser.telegram_id)
+            .then(setUserSubmissions)
+            .catch(err => {
+              console.error("Failed to fetch submissions:", err);
+              alert(`Error: ${err.message}`);
+            })
+            .finally(() => setIsLoading(false));
+    }
+  }, [currentUser, activeView]);
+
+  const handleLogin = () => {
+    setIsLoggingIn(true);
+    // Simulate getting Telegram user data
+    const mockTelegramUser = {
+        id: 123456789,
+        username: "testuser",
+        first_name: "Test",
+        last_name: "User",
+        photo_url: "https://picsum.photos/seed/user/200"
+    };
+    login(mockTelegramUser)
+        .then(setCurrentUser)
+        .catch(err => {
+            console.error("Login failed:", err);
+            alert(`Login Failed: ${err.message}`);
+        })
+        .finally(() => setIsLoggingIn(false));
+  };
+
+  const handleLinkWallet = async () => {
+    if(!currentUser) return;
     // Simulate TON Connect SDK process
-    setTimeout(() => {
-      setIsConnected(true);
-      setIsConnecting(false);
-    }, 2000);
+    alert("Wallet connect modal would open here.");
+    const mockWalletAddress = `EQ${Date.now().toString(36)}...xyz`;
+    try {
+        await linkWallet(currentUser.telegram_id, mockWalletAddress);
+        // Update user state locally
+        setCurrentUser(prev => prev ? {...prev, wallet_address: mockWalletAddress} : null);
+        alert("Wallet linked successfully!");
+    } catch (error) {
+        console.error(error);
+        alert("Failed to link wallet.");
+    }
   };
   
-  const handleSelectBounty = (bounty: Bounty) => {
-    setSelectedBounty(bounty);
+  const handleSelectChallenge = (challenge: Challenge) => {
+    setSelectedChallenge(challenge);
   };
 
   const handleCloseDetails = () => {
-    setSelectedBounty(null);
+    setSelectedChallenge(null);
   };
 
-  const handleSubmitProof = (bountyId: string, reward: number, image: File) => {
-    console.log(`Submitting proof for bounty ${bountyId} with reward ${reward}`, image);
+  const handleCreateSubmission = async (challengeId: number, image: File) => {
+    if (!currentUser) return;
     
-    // Update user state
-    setCurrentUser(prevUser => ({
-      ...prevUser,
-      balance: prevUser.balance + reward,
-      completedBounties: prevUser.completedBounties + 1,
-      reputation: prevUser.reputation + 10, // Increase reputation
-    }));
+    // As per new spec, backend expects an image URL.
+    // We will mock the image upload process and generate a placeholder URL.
+    const mockImageUrl = `https://cdn.brandchallenge.com/uploads/mock_${Date.now()}_${image.name}`;
+    console.log(`Submitting with mock URL: ${mockImageUrl}`);
 
-    // Remove bounty from list
-    setBounties(prevBounties => prevBounties.filter(b => b.id !== bountyId));
+    await createSubmission(currentUser.telegram_id, challengeId, mockImageUrl);
 
-    // Simulate network delay then close
+    // BountyDetails shows a success message. We close the modal after a short delay.
     setTimeout(() => {
         handleCloseDetails();
+        // Optionally, refresh submissions if user is on profile page
+        if (activeView === 'profile') {
+          getUserSubmissions(currentUser.telegram_id).then(setUserSubmissions);
+        }
     }, 2000);
   };
 
-  const handleCreateBounty = (bountyData: Omit<Bounty, 'id' | 'imageUrl'>, totalCost: number) => {
-    const newBounty: Bounty = {
-        ...bountyData,
-        id: new Date().getTime().toString(), // simple unique id
-        imageUrl: `https://picsum.photos/seed/${Math.random()}/400/200` // random image
-    };
-
-    // Add new bounty to the list
-    setBounties(prevBounties => [newBounty, ...prevBounties]);
-    
-    // Deduct cost from user balance
-    setCurrentUser(prevUser => ({
-        ...prevUser,
-        balance: prevUser.balance - totalCost,
-    }));
-    
-    // Switch back to home view
-    setActiveView('home');
-  };
-
   const renderContent = () => {
+    if (isLoading) {
+        return (
+          <div className="flex justify-center items-center h-full pt-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        );
+    }
+
     switch(activeView) {
         case 'home':
-            if (isLoading) {
-                return (
-                  <div className="flex justify-center items-center h-full pt-20">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-                  </div>
-                );
-            }
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-24">
-                  {bounties.map((bounty) => (
-                    <BountyCard key={bounty.id} bounty={bounty} onSelect={() => handleSelectBounty(bounty)} />
+                  {challenges.map((challenge) => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} onSelect={() => handleSelectChallenge(challenge)} />
                   ))}
                 </div>
             );
         case 'profile':
-            return <ProfileView user={currentUser} />;
-        case 'create':
-            return <CreateBountyView user={currentUser} onCreateBounty={handleCreateBounty} onClose={() => setActiveView('home')} />;
+            return <ProfileView user={currentUser!} submissions={userSubmissions} onLinkWallet={handleLinkWallet} />;
         default:
             return null;
     }
   };
 
-  if (!isConnected) {
-    return <ConnectWallet onConnect={handleConnect} isConnecting={isConnecting} />;
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} isLoggingIn={isLoggingIn} />;
   }
 
   return (
@@ -123,11 +143,11 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       <BottomNav activeView={activeView} setActiveView={setActiveView} />
-      {selectedBounty && (
-        <BountyDetails 
-          bounty={selectedBounty} 
+      {selectedChallenge && (
+        <ChallengeDetails
+          challenge={selectedChallenge} 
           onClose={handleCloseDetails} 
-          onSubmit={handleSubmitProof} 
+          onSubmit={handleCreateSubmission} 
         />
       )}
     </div>

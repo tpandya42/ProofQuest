@@ -1,0 +1,7 @@
+{
+  "name": "ProofQuest - TON Offline Data Marketplace",
+  "description": "A Telegram Mini App for a decentralized marketplace where contributors collect, verify, and get rewarded for real-life information using the TON blockchain.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

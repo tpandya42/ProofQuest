@@ -1,15 +1,13 @@
-
 import React from 'react';
 import { User, SubmissionWithChallengeDetails } from '../types';
-import { TonIcon } from './icons/TonIcon';
+import { TonConnectButton } from '@tonconnect/ui-react';
 
 interface ProfileViewProps {
   user: User;
   submissions: SubmissionWithChallengeDetails[];
-  onLinkWallet: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ user, submissions, onLinkWallet }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ user, submissions }) => {
   return (
     <div className="p-4 animate-fade-in-up pb-24">
       <div className="flex flex-col items-center mb-8">
@@ -31,13 +29,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, submissions, onLinkWall
         ) : (
           <div className="text-center">
             <p className="text-gray-400 mb-3 text-sm">Your wallet is not connected.</p>
-            <button
-              onClick={onLinkWallet}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-200"
-            >
-              <TonIcon className="w-5 h-5 mr-2" />
-              Link TON Wallet
-            </button>
+            <div className="flex justify-center">
+                <TonConnectButton />
+            </div>
           </div>
         )}
       </div>

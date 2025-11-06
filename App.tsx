@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTonWallet } from '@tonconnect/ui-react';
 import { Challenge, User, View, SubmissionWithChallengeDetails } from './types';
 import { login, getActiveChallenges, createSubmission, getUserSubmissions, linkWallet } from './backend/api';
 import Header from './components/Header';
@@ -7,6 +8,31 @@ import ChallengeDetails from './components/ChallengeDetails';
 import BottomNav from './components/BottomNav';
 import ProfileView from './components/ProfileView';
 import LoginScreen from './components/LoginScreen';
+
+// Add this interface to define the structure of the Telegram WebApp object
+interface TelegramWebApp {
+  initDataUnsafe: {
+    user?: {
+      id: number;
+      first_name?: string;
+      last_name?: string;
+      username?: string;
+      photo_url?: string;
+    };
+  };
+  ready: () => void;
+  // Add other methods and properties as needed
+}
+
+// Add Telegram to the Window interface
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: TelegramWebApp;
+    };
+  }
+}
+
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -18,6 +44,7 @@ const App: React.FC = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [activeView, setActiveView] = useState<View>('home');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const wallet = useTonWallet();
   
   // Fetch challenges after login
   useEffect(() => {
@@ -44,39 +71,69 @@ const App: React.FC = () => {
     }
   }, [currentUser, activeView]);
 
+  // Effect to link wallet when it connects
+  useEffect(() => {
+    if (currentUser && wallet && wallet.account.address && currentUser.wallet_address !== wallet.account.address) {
+      const walletAddress = wallet.account.address;
+      // Prevent multiple requests if wallet is already linked in state
+      if (currentUser.wallet_address === walletAddress) return;
+
+      setIsLoading(true);
+      linkWallet(currentUser.telegram_id, walletAddress)
+        .then(() => {
+          setCurrentUser(prev => prev ? {...prev, wallet_address: walletAddress} : null);
+          alert("Wallet linked successfully!");
+        })
+        .catch(error => {
+          console.error("Failed to link wallet:", error);
+          alert(`Failed to link wallet: ${error.message}`);
+        })
+        .finally(() => setIsLoading(false));
+    }
+  }, [wallet, currentUser]);
+
   const handleLogin = () => {
     setIsLoggingIn(true);
-    // Simulate getting Telegram user data
-    const mockTelegramUser = {
-        id: 123456789,
-        username: "testuser",
-        first_name: "Test",
-        last_name: "User",
-        photo_url: "https://picsum.photos/seed/user/200"
-    };
-    login(mockTelegramUser)
-        .then(setCurrentUser)
-        .catch(err => {
-            console.error("Login failed:", err);
-            alert(`Login Failed: ${err.message}`);
-        })
-        .finally(() => setIsLoggingIn(false));
-  };
-
-  const handleLinkWallet = async () => {
-    if(!currentUser) return;
-    // Simulate TON Connect SDK process
-    alert("Wallet connect modal would open here.");
-    const mockWalletAddress = `EQ${Date.now().toString(36)}...xyz`;
-    try {
-        await linkWallet(currentUser.telegram_id, mockWalletAddress);
-        // Update user state locally
-        setCurrentUser(prev => prev ? {...prev, wallet_address: mockWalletAddress} : null);
-        alert("Wallet linked successfully!");
-    } catch (error) {
-        console.error(error);
-        alert("Failed to link wallet.");
+    
+    const tg = window.Telegram?.WebApp;
+    
+    // For development in a regular browser or if user data is unavailable
+    if (!tg?.initDataUnsafe?.user) {
+        console.warn("Telegram user data not found. Using mock user for development.");
+        const mockTelegramUser = {
+            id: 123456789,
+            username: "testuser",
+            first_name: "Test",
+            last_name: "User",
+            photo_url: "https://picsum.photos/seed/user/200"
+        };
+        login(mockTelegramUser)
+            .then(setCurrentUser)
+            .catch(err => {
+                console.error("Mock login failed:", err);
+                alert(`Mock Login Failed: ${err.message}`);
+            })
+            .finally(() => setIsLoggingIn(false));
+        return;
     }
+
+    // For production in Telegram Mini App
+    tg.ready();
+    const telegramUser = tg.initDataUnsafe.user;
+
+    login({
+        id: telegramUser.id,
+        username: telegramUser.username,
+        first_name: telegramUser.first_name,
+        last_name: telegramUser.last_name,
+        photo_url: telegramUser.photo_url,
+    })
+    .then(setCurrentUser)
+    .catch(err => {
+        console.error("Login failed:", err);
+        alert(`Login Failed: ${err.message}`);
+    })
+    .finally(() => setIsLoggingIn(false));
   };
   
   const handleSelectChallenge = (challenge: Challenge) => {
@@ -126,7 +183,7 @@ const App: React.FC = () => {
                 </div>
             );
         case 'profile':
-            return <ProfileView user={currentUser!} submissions={userSubmissions} onLinkWallet={handleLinkWallet} />;
+            return <ProfileView user={currentUser!} submissions={userSubmissions} />;
         default:
             return null;
     }

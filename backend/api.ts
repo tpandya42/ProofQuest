@@ -1,7 +1,7 @@
 import { Challenge, Submission, User, SubmissionWithChallengeDetails } from '../types';
 
 // Use the production backend URL provided in the documentation.
-const BASE_URL = 'https://brand-challenge-backend.onrender.com';
+const BASE_URL = 'https://backend-proof-quest.onrender.com';
 
 // --- API FUNCTIONS ---
 

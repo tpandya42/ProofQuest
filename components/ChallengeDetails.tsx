@@ -65,16 +65,16 @@ const ChallengeDetails: React.FC<ChallengeDetailsProps> = ({ challenge, onClose,
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const imagePart = await fileToGenerativePart(imageFile);
-      const prompt = `Analyze the provided image to see if it fulfills the core task of this request: "${challenge.description}". Focus on the main subject. Is it a plausible submission? Respond with only "Yes" or "No", followed by a brief, one-sentence explanation.`;
+      const prompt = `Analyze the provided image to see if it is related to this request: "${challenge.description}". Focus on the main subject. Is it a plausible submission? Respond with only "Yes" or "No", followed by a brief, one-sentence explanation.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         contents: { parts: [imagePart, { text: prompt }] },
       });
       
       const text = response.text;
       setAiResponse(text);
-      if (text.toLowerCase().startsWith('yes')) {
+      if (text.toLowerCase().includes('yes')) {
         setIsVerified(true);
       }
     } catch (e) {

@@ -1,0 +1,7 @@
+{
+  "name": "ProofQuest",
+  "description": "A Telegram Mini App for users to complete challenges, submit photo proofs, and get rewards.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProofQuest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'primary': '#4971EC',
+              'light-blue': '#97C0EB',
+              'mint': '#B5F0DB',
+              'lavender': '#B19AEC',
+              'background': '#0E1327',
+              'background-light': '#1A2035',
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "@tonconnect/ui-react": "https://aistudiocdn.com/@tonconnect/ui-react@^2.0.5",
+    "@tonconnect/sdk": "https://aistudiocdn.com/@tonconnect/sdk@^3.0.3",
+    "buffer": "https://aistudiocdn.com/buffer@^6.0.3"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
